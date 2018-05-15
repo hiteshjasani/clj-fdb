@@ -1,4 +1,4 @@
-(ns clj-fdb.core-test
+(ns clj-fdb.tuple-test
   (:require [clojure.test :refer [run-tests deftest testing is are
                                   with-test use-fixtures]])
   (:use [clj-fdb.tuple :rename {range tuple-range}])
