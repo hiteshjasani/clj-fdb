@@ -24,13 +24,14 @@
 (defmethod range [Subspace String] [x y] (.range x (tuple y)))
 (defmethod range [Subspace Long] [x y] (.range x (tuple y)))
 
-(defn as-tuple
-  [^Subspace x]
-  (Tuple/fromBytes (.pack x)))
+(extend-protocol tup/ConvertibleToTuple
+  Subspace
+  (tuple [x] (Tuple/fromBytes (.pack x))))
 
-(defn as-bytes
-  [^Subspace x]
-  (.pack x))
+(defmethod pack [Subspace] [x] (.pack x))
+(defmethod pack [Subspace Tuple] [x y] (.pack x y))
+(defmethod pack [Subspace String] [x y] (.pack x y))
+(defmethod pack [Subspace Long] [x y] (.pack x y))
 
 (defn as-str
   [^Subspace x]
@@ -38,4 +39,4 @@
 
 (defn as-strs
   [^Subspace x]
-  (tup/as-strs (Tuple/fromBytes (.pack x))))
+  (tup/to-strs (Tuple/fromBytes (.pack x))))

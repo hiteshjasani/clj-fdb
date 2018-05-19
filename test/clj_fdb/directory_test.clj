@@ -5,7 +5,6 @@
             [clj-fdb.directory :refer :all]
             [clj-fdb.subspace :as ss]
             [clj-fdb.tuple :as tup]
-            [clj-fdb.byte-array :as ba]
             ))
 
 (deftest making-directories

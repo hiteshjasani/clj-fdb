@@ -1,6 +1,5 @@
 (ns clj-fdb.directory
-  (:require [clj-fdb.byte-array :as ba]
-            [clj-fdb.tuple :as tup])
+  (:require [clj-fdb.tuple :as tup])
   (:import (com.apple.foundationdb TransactionContext)
            (com.apple.foundationdb.directory DirectoryLayer)))
 
@@ -16,9 +15,9 @@
 
   [async] Async call, invoke `.join` to block until the value is returned."
   ([^DirectoryLayer dl ^TransactionContext tx-ctx path-seq]
-   (.createOrOpen dl tx-ctx path-seq (ba/byte-arr "")))
+   (.createOrOpen dl tx-ctx path-seq (tup/byte-arr "")))
   ([^DirectoryLayer dl ^TransactionContext tx-ctx path-seq ^String layer-name]
-   (.createOrOpen dl tx-ctx path-seq (ba/byte-arr layer-name))))
+   (.createOrOpen dl tx-ctx path-seq (tup/byte-arr layer-name))))
 
 (defn exists?
   "Check if path exists.
