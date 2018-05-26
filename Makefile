@@ -6,3 +6,4 @@ test:
 	clj -C:test test/clj_fdb/directory_test.clj
 	clj -C:test test/clj_fdb/tuple_test.clj
 	clj -C:test test/clj_fdb/subspace_test.clj
+	clj -C:test test/clj_fdb/simple_test.clj

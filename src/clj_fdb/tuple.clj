@@ -3,6 +3,7 @@
   (:require [octet.core :as buf])
   (:import (java.math BigInteger)
            (java.nio ByteBuffer ByteOrder)
+           (java.nio.charset StandardCharsets)
            (com.apple.foundationdb.tuple Tuple)))
 
 (def _byte-order_ ByteOrder/BIG_ENDIAN)
@@ -43,7 +44,7 @@
 (defmethod pack [Long] [x] (.pack (tuple x)))
 (defmethod pack [Long Long] [x y] (.pack (.add (tuple x) (tuple y))))
 (defmethod pack [Long String] [x y] (.pack (.add (tuple x) (tuple y))))
-(defmethod pack [String] [x] (.pack (tuple x)))
+(defmethod pack [String] [x] (.getBytes x StandardCharsets/UTF_8))
 (defmethod pack [String Long] [x y] (.pack (.add (tuple x) (tuple y))))
 (defmethod pack [String String] [x y] (.pack (.add (tuple x) (tuple y))))
 (defmethod pack [Tuple] [x] (.pack x))
@@ -83,8 +84,8 @@
 (extend-protocol ConvertibleToUsableTypes
   ;; byte[]
   (Class/forName "[B")
-  (to-str [x] (String. x))
-  (to-strs [x] [(String. x)])
+  (to-str [x] (String. x StandardCharsets/UTF_8))
+  (to-strs [x] [(String. x StandardCharsets/UTF_8)])
 
 
   ;; (to-long [x] (-> (ByteBuffer/wrap x)
