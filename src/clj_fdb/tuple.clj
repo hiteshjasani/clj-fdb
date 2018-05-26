@@ -77,6 +77,18 @@
   (^byte to-byte [x]))
 
 (extend-protocol ConvertibleToUsableTypes
+  nil
+  (to-str [x] nil)
+  (to-strs [x] nil)
+  (to-long [x] nil)
+  (to-int [x] nil)
+  (to-big-int [x] nil)
+  (to-short [x] nil)
+  (to-bool [x] nil)
+  (to-double [x] nil)
+  (to-float [x] nil)
+  (to-byte [x] nil)
+
   Tuple
   (to-str [x] (.getString x 0))
   (to-strs [x] (.getItems x))
@@ -172,6 +184,9 @@
 
   Byte
   (byte-arr [x] (into-byte-arr x :byte))
+
+  BigInteger
+  (byte-arr [x] (.toByteArray x))
 
   Float
   (byte-arr [x] (into-byte-arr x :float))
