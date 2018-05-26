@@ -21,14 +21,17 @@
   Long
   (tuple [x] (Tuple/from (into-array Long [x])))
 
+  Integer
+  (tuple [x] (Tuple/from (into-array Integer [x])))
+
   BigInteger
   (tuple [x] (Tuple/from (into-array BigInteger [x])))
 
-  Float
-  (tuple [x] (Tuple/from (into-array Float [x])))
-
   Double
   (tuple [x] (Tuple/from (into-array Double [x])))
+
+  Float
+  (tuple [x] (Tuple/from (into-array Float [x])))
 
   Tuple
   (tuple [x] x))
@@ -39,15 +42,21 @@
   (tuple [x] (Tuple/fromBytes x)))
 
 (defmulti pack
-  "Pack into a byte[]"
+  "Pack into a byte[].  This function is usable for keys but should
+  not be used for turning values into byte arrays as the `to-*`
+  functions will not be able to convert them back."
   (fn [x & ys] (vec (concat [(class x)] (map class ys)))))
 (defmethod pack [Long] [x] (.pack (tuple x)))
+(defmethod pack [Double] [x] (.pack (tuple x)))
+(defmethod pack [Integer] [x] (.pack (tuple x)))
+(defmethod pack [Float] [x] (.pack (tuple x)))
+(defmethod pack [String] [x] (.getBytes x StandardCharsets/UTF_8))
+(defmethod pack [Tuple] [x] (.pack x))
+
 (defmethod pack [Long Long] [x y] (.pack (.add (tuple x) (tuple y))))
 (defmethod pack [Long String] [x y] (.pack (.add (tuple x) (tuple y))))
-(defmethod pack [String] [x] (.getBytes x StandardCharsets/UTF_8))
 (defmethod pack [String Long] [x y] (.pack (.add (tuple x) (tuple y))))
 (defmethod pack [String String] [x y] (.pack (.add (tuple x) (tuple y))))
-(defmethod pack [Tuple] [x] (.pack x))
 (defmethod pack [Tuple Tuple] [x y] (.pack (.add x y)))
 
 (defmulti range
@@ -87,26 +96,6 @@
   (to-str [x] (String. x StandardCharsets/UTF_8))
   (to-strs [x] [(String. x StandardCharsets/UTF_8)])
 
-
-  ;; (to-long [x] (-> (ByteBuffer/wrap x)
-  ;;                  #_(.order _byte-order_)
-  ;;                  (.getLong)))
-  ;; (to-int [x] (-> (ByteBuffer/wrap x)
-  ;;                 (.getInt)))
-  ;; (to-big-int [x] (BigInteger. x))
-  ;; (to-short [x] (-> (ByteBuffer/wrap x)
-  ;;                   (.getShort)))
-  ;; (to-bool [x] (if (= 0x01 (.get (ByteBuffer/wrap x)))
-  ;;                true
-  ;;                false))
-  ;; (to-double [x] (-> (ByteBuffer/wrap x)
-  ;;                    (.getDouble)))
-  ;; (to-float [x] (-> (ByteBuffer/wrap x)
-  ;;                   (.getFloat)))
-  ;; (to-byte [x] (-> (ByteBuffer/wrap x)
-  ;;                  (.get)))
-
-
   (to-long [x] (-> (ByteBuffer/wrap x)
                    (.order _byte-order_)
                    (.getLong)))
@@ -129,25 +118,7 @@
   (to-byte [x] (-> (ByteBuffer/wrap x)
                    (.order _byte-order_)
                    (.get)))
-
-
-  ;; (to-long [x] (buf/read (ByteBuffer/wrap x) (buf/int64)))
-  ;; (to-int [x] (buf/read (ByteBuffer/wrap x) (buf/int32)))
-  ;; (to-big-int [x] (BigInteger. x))
-  ;; (to-short [x] (buf/read (ByteBuffer/wrap x) (buf/int16)))
-  ;; (to-bool [x] (buf/read (ByteBuffer/wrap x) (buf/bool)))
-  ;; (to-double [x] (buf/read (ByteBuffer/wrap x) (buf/double)))
-  ;; (to-float [x] (buf/read (ByteBuffer/wrap x) (buf/float)))
-  ;; (to-byte [x] (buf/read (ByteBuffer/wrap x) (buf/byte)))
   )
-
-#_(defn sz
-  [typ]
-  (buf/size typ))
-
-#_(defn make-heap-buffer
-  [size]
-  (buf/allocate size {:type :heap :impl :nio}))
 
 (defn sz
   [type-kw]
@@ -189,48 +160,24 @@
 
   Long
   (byte-arr [x] (into-byte-arr x :long))
-  ;; (byte-arr [x] (-> (ByteBuffer.)
-  ;;                   (.putLong x)
-  ;;                   (.array)))
-  ;; (byte-arr [x] (let [b (make-heap-buffer (sz buf/int64))]
-  ;;                 (buf/write! b x buf/int64)
-  ;;                 (.array b)))
 
   Integer
   (byte-arr [x] (into-byte-arr x :int))
-  ;; (byte-arr [x] (let [b (make-heap-buffer (sz buf/int32))]
-  ;;                 (buf/write! b x buf/int32)
-  ;;                 (.array b)))
 
   Short
   (byte-arr [x] (into-byte-arr x :short))
-  ;; (byte-arr [x] (let [b (make-heap-buffer (sz buf/int16))]
-  ;;                 (buf/write! b x buf/int16)
-  ;;                 (.array b)))
 
   Boolean
   (byte-arr [x] (into-byte-arr x :boolean))
-  ;; (byte-arr [x] (let [b (make-heap-buffer (sz buf/bool))]
-  ;;                 (buf/write! b x buf/bool)
-  ;;                 (.array b)))
 
   Byte
   (byte-arr [x] (into-byte-arr x :byte))
-  ;; (byte-arr [x] (let [b (make-heap-buffer (sz buf/byte))]
-  ;;                 (buf/write! b x buf/byte)
-  ;;                 (.array b)))
 
   Float
   (byte-arr [x] (into-byte-arr x :float))
-  ;; (byte-arr [x] (let [b (make-heap-buffer (sz buf/float))]
-  ;;                 (buf/write! b x buf/float)
-  ;;                 (.array b)))
 
   Double
   (byte-arr [x] (into-byte-arr x :double))
-  ;; (byte-arr [x] (let [b (make-heap-buffer (sz buf/double))]
-  ;;                 (buf/write! b x buf/double)
-  ;;                 (.array b)))
   )
 
 (extend-protocol ConvertibleToByteArray
