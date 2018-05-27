@@ -104,4 +104,60 @@
       ))
   )
 
+(deftest atomic-tests
+  (testing "counters"
+    (let [ss (-> (dir/create-or-open (dir/directory-layer) *db*
+                                     (conj test-subspace "atomic-counters"))
+                 (.join))]
+      (testing "incrementing"
+        (put-val *db* (tup/pack ss "id-gen") (val/byte-arr 0))
+        (is (= 0 (val/to-long (get-val *db* (tup/pack ss "id-gen")))))
+        (atomic *db* (tup/pack ss "id-gen") :add (val/byte-arr 1))
+        (is (= 1 (val/to-long (get-val *db* (tup/pack ss "id-gen")))))
+        (atomic *db* (tup/pack ss "id-gen") :add (val/byte-arr 1))
+        (is (= 2 (val/to-long (get-val *db* (tup/pack ss "id-gen"))))))
+      (testing "incrementing by more than 1"
+        (atomic *db* (tup/pack ss "id-gen") :add (val/byte-arr 3))
+        (is (= 5 (val/to-long (get-val *db* (tup/pack ss "id-gen"))))))
+      (testing "decrementing"
+        (atomic *db* (tup/pack ss "id-gen") :add (val/byte-arr 0))
+        (is (= 5 (val/to-long (get-val *db* (tup/pack ss "id-gen")))))
+        (atomic *db* (tup/pack ss "id-gen") :add (val/byte-arr -1))
+        (is (= 4 (val/to-long (get-val *db* (tup/pack ss "id-gen")))))
+        (atomic *db* (tup/pack ss "id-gen") :add (val/byte-arr -3))
+        (is (= 1 (val/to-long (get-val *db* (tup/pack ss "id-gen")))))
+        )
+      ))
+
+  (testing "bit ops"
+    (let [ss (-> (dir/create-or-open (dir/directory-layer) *db*
+                                     (conj test-subspace "atomic-bit-ops"))
+                 (.join))]
+      (testing "AND"
+        (put-val *db* (tup/pack ss "foo") (val/byte-arr 0xabcd))
+        (is (= 0xabcd (val/to-long (get-val *db* (tup/pack ss "foo")))))
+
+        (atomic *db* (tup/pack ss "foo") :bit-and (val/byte-arr 0x0f0f))
+        (is (= 0x0b0d (val/to-long (get-val *db* (tup/pack ss "foo")))))
+        )
+
+      (testing "OR"
+        (put-val *db* (tup/pack ss "foo") (val/byte-arr 0x0b0d))
+        (is (= 0x0b0d (val/to-long (get-val *db* (tup/pack ss "foo")))))
+
+        (atomic *db* (tup/pack ss "foo") :bit-or (val/byte-arr 0xa0c0))
+        (is (= 0xabcd (val/to-long (get-val *db* (tup/pack ss "foo")))))
+        )
+
+      (testing "XOR"
+        (put-val *db* (tup/pack ss "foo") (val/byte-arr 0xabcd))
+        (is (= 0xabcd (val/to-long (get-val *db* (tup/pack ss "foo")))))
+
+        (atomic *db* (tup/pack ss "foo") :bit-xor (val/byte-arr 0x6622))
+        (is (= 0xcdef (val/to-long (get-val *db* (tup/pack ss "foo")))))
+        )
+      ))
+  )
+
+
 (run-tests)
