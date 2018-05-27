@@ -5,6 +5,7 @@
             [clj-fdb.directory :as dir]
             [clj-fdb.subspace :as ss]
             [clj-fdb.tuple :as tup]
+            [clj-fdb.value :as val]
             [clj-fdb.simple :refer :all]
             ))
 
@@ -33,45 +34,45 @@
 
 (deftest put-get
   (testing "strings"
-    (put-val *db* (tup/pack *ss* "foo") (tup/byte-arr "bar"))
-    (let [v (tup/to-str (get-val *db* (tup/pack *ss* "foo")))]
+    (put-val *db* (tup/pack *ss* "foo") (val/byte-arr "bar"))
+    (let [v (val/to-str (get-val *db* (tup/pack *ss* "foo")))]
       (is (= 3 (count v)))
       (is (= java.lang.String (type v)))
       (is (= "bar" v))))
 
   (testing "booleans"
-    (put-val *db* (tup/pack *ss* "is-true") (tup/byte-arr true))
-    (is (= true (tup/to-bool (get-val *db* (tup/pack *ss* "is-true")))))
-    (put-val *db* (tup/pack *ss* "is-false") (tup/byte-arr false))
-    (is (= false (tup/to-bool (get-val *db* (tup/pack *ss* "is-false")))))
+    (put-val *db* (tup/pack *ss* "is-true") (val/byte-arr true))
+    (is (= true (val/to-bool (get-val *db* (tup/pack *ss* "is-true")))))
+    (put-val *db* (tup/pack *ss* "is-false") (val/byte-arr false))
+    (is (= false (val/to-bool (get-val *db* (tup/pack *ss* "is-false")))))
     (is (= nil
-           (tup/to-bool (get-val *db* (tup/pack *ss* "bool-does-not-exist")))))
+           (val/to-bool (get-val *db* (tup/pack *ss* "bool-does-not-exist")))))
     )
 
   (testing "integral numbers"
-    (put-val *db* (tup/pack *ss* "int-answer") (tup/byte-arr (int 42)))
-    (is (= (int 42) (tup/to-int (get-val *db* (tup/pack *ss* "int-answer")))))
-    (put-val *db* (tup/pack *ss* "long-answer") (tup/byte-arr (long 42)))
+    (put-val *db* (tup/pack *ss* "int-answer") (val/byte-arr (int 42)))
+    (is (= (int 42) (val/to-int (get-val *db* (tup/pack *ss* "int-answer")))))
+    (put-val *db* (tup/pack *ss* "long-answer") (val/byte-arr (long 42)))
     (is (= 42 (long 42)
-           (tup/to-long (get-val *db* (tup/pack *ss* "long-answer")))))
-    (put-val *db* (tup/pack *ss* "short-answer") (tup/byte-arr (short 42)))
+           (val/to-long (get-val *db* (tup/pack *ss* "long-answer")))))
+    (put-val *db* (tup/pack *ss* "short-answer") (val/byte-arr (short 42)))
     (is (= (short 42)
-           (tup/to-short (get-val *db* (tup/pack *ss* "short-answer")))))
-    (put-val *db* (tup/pack *ss* "byte-answer") (tup/byte-arr (byte 42)))
+           (val/to-short (get-val *db* (tup/pack *ss* "short-answer")))))
+    (put-val *db* (tup/pack *ss* "byte-answer") (val/byte-arr (byte 42)))
     (is (= (byte 42)
-           (tup/to-byte (get-val *db* (tup/pack *ss* "byte-answer")))))
+           (val/to-byte (get-val *db* (tup/pack *ss* "byte-answer")))))
     (put-val *db* (tup/pack *ss* "big-int-answer")
-             (tup/byte-arr (BigInteger. "42")))
+             (val/byte-arr (BigInteger. "42")))
     (is (= (BigInteger. "42")
-           (tup/to-big-int (get-val *db* (tup/pack *ss* "big-int-answer")))))
+           (val/to-big-int (get-val *db* (tup/pack *ss* "big-int-answer")))))
     )
 
   (testing "floating point numbers"
-    (put-val *db* (tup/pack *ss* "f-pi") (tup/byte-arr (float 3.14159)))
-    (is (= (float 3.14159) (tup/to-float (get-val *db* (tup/pack *ss* "f-pi")))))
-    (put-val *db* (tup/pack *ss* "d-pi") (tup/byte-arr (double 3.14159)))
+    (put-val *db* (tup/pack *ss* "f-pi") (val/byte-arr (float 3.14159)))
+    (is (= (float 3.14159) (val/to-float (get-val *db* (tup/pack *ss* "f-pi")))))
+    (put-val *db* (tup/pack *ss* "d-pi") (val/byte-arr (double 3.14159)))
     (is (= 3.14159 (double 3.14159)
-           (tup/to-double (get-val *db* (tup/pack *ss* "d-pi")))))
+           (val/to-double (get-val *db* (tup/pack *ss* "d-pi")))))
     )
   )
 

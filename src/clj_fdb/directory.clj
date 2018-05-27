@@ -15,9 +15,9 @@
 
   [async] Async call, invoke `.join` to block until the value is returned."
   ([^DirectoryLayer dl ^TransactionContext tx-ctx path-seq]
-   (.createOrOpen dl tx-ctx path-seq (tup/byte-arr "")))
+   (.createOrOpen dl tx-ctx path-seq (tup/pack "")))
   ([^DirectoryLayer dl ^TransactionContext tx-ctx path-seq ^String layer-name]
-   (.createOrOpen dl tx-ctx path-seq (tup/byte-arr layer-name))))
+   (.createOrOpen dl tx-ctx path-seq (tup/pack layer-name))))
 
 (defn exists?
   "Check if path exists.
