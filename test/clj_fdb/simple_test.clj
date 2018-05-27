@@ -76,4 +76,32 @@
     )
   )
 
+(deftest put-vals-test
+  (testing "strings"
+    (let [ss (-> (dir/create-or-open (dir/directory-layer) *db*
+                                     (conj test-subspace "put-vals-strings"))
+                 (.join))]
+      (put-vals *db* {(tup/pack ss "name") (val/byte-arr "elle")
+                      (tup/pack ss "state") (val/byte-arr "wa")
+                      (tup/pack ss "city") (val/byte-arr "seattle")})
+      (is (= "elle" (val/to-str (get-val *db* (tup/pack ss "name")))))
+      (is (= "wa" (val/to-str (get-val *db* (tup/pack ss "state")))))
+      (is (= "seattle" (val/to-str (get-val *db* (tup/pack ss "city")))))
+      ))
+
+  (testing "combo-types"
+    (let [ss (-> (dir/create-or-open (dir/directory-layer) *db*
+                                     (conj test-subspace "put-vals-combos"))
+                 (.join))]
+      (put-vals *db* {(tup/pack ss "name") (val/byte-arr "elle")
+                      (tup/pack ss "age") (val/byte-arr 22)
+                      (tup/pack ss "score") (val/byte-arr 3.14159)
+                      (tup/pack ss "female?") (val/byte-arr true)})
+      (is (= "elle" (val/to-str (get-val *db* (tup/pack ss "name")))))
+      (is (= 22 (val/to-long (get-val *db* (tup/pack ss "age")))))
+      (is (= 3.14159 (val/to-double (get-val *db* (tup/pack ss "score")))))
+      (is (= true (val/to-bool (get-val *db* (tup/pack ss "female?")))))
+      ))
+  )
+
 (run-tests)
