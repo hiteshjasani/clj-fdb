@@ -6,8 +6,6 @@
            (java.nio.charset StandardCharsets)
            (com.apple.foundationdb.tuple Tuple)))
 
-(def _byte-order_ ByteOrder/BIG_ENDIAN)
-
 (defprotocol ConvertibleToTuple
   (tuple [x]))
 

@@ -6,7 +6,10 @@
            (java.nio.charset StandardCharsets)
            ))
 
-(def _byte-order_ ByteOrder/BIG_ENDIAN)
+;; Choose little endian since most clients and servers will be running on
+;; little endian cpus (Intel and AMD)
+;; https://en.wikipedia.org/wiki/Endianness
+(def _byte-order_ ByteOrder/LITTLE_ENDIAN)
 
 (defprotocol ConvertibleToUsableTypes
   (^String to-str [x])
