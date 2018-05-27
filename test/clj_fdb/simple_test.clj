@@ -156,6 +156,28 @@
         (atomic *db* (tup/pack ss "foo") :bit-xor (val/byte-arr 0x6622))
         (is (= 0xcdef (val/to-long (get-val *db* (tup/pack ss "foo")))))
         )
+
+      (testing "MIN"
+        (put-val *db* (tup/pack ss "foo") (val/byte-arr 0xabcd))
+        (is (= 0xabcd (val/to-long (get-val *db* (tup/pack ss "foo")))))
+
+        (atomic *db* (tup/pack ss "foo") :min (val/byte-arr 0x6622))
+        (is (= 0x6622 (val/to-long (get-val *db* (tup/pack ss "foo")))))
+
+        (atomic *db* (tup/pack ss "foo") :min (val/byte-arr 0xcdef))
+        (is (= 0x6622 (val/to-long (get-val *db* (tup/pack ss "foo")))))
+        )
+
+      (testing "MAX"
+        (put-val *db* (tup/pack ss "foo") (val/byte-arr 0xabcd))
+        (is (= 0xabcd (val/to-long (get-val *db* (tup/pack ss "foo")))))
+
+        (atomic *db* (tup/pack ss "foo") :max (val/byte-arr 0x6622))
+        (is (= 0xabcd (val/to-long (get-val *db* (tup/pack ss "foo")))))
+
+        (atomic *db* (tup/pack ss "foo") :max (val/byte-arr 0xcdef))
+        (is (= 0xcdef (val/to-long (get-val *db* (tup/pack ss "foo")))))
+        )
       ))
   )
 
