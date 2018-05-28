@@ -7,32 +7,51 @@
            (com.apple.foundationdb.tuple Tuple)))
 
 (defprotocol ConvertibleToTuple
-  (tuple [x]))
+  (tuple [x] [x y]))
 
 (extend-protocol ConvertibleToTuple
   nil
-  (tuple [x] (Tuple.))
+  (tuple
+    ([x] (Tuple.))
+    ([x y] (Tuple/from (into-array Tuple [(tuple x) (tuple y)]))))
 
   String
-  (tuple [x] (Tuple/from (into-array String [x])))
+  (tuple
+    ([x] (Tuple/from (into-array String [x])))
+    ([x y] (Tuple/from (into-array Tuple [(tuple x) (tuple y)])))
+    ;; ([x y] (.add (tuple x) (tuple y)))
+    )
 
   Long
-  (tuple [x] (Tuple/from (into-array Long [x])))
+  (tuple
+    ([x] (Tuple/from (into-array Long [x])))
+    ([x y] (Tuple/from (into-array Tuple [(tuple x) (tuple y)]))))
 
   Integer
-  (tuple [x] (Tuple/from (into-array Integer [x])))
+  (tuple
+    ([x] (Tuple/from (into-array Integer [x])))
+    ([x y] (Tuple/from (into-array Tuple [(tuple x) (tuple y)]))))
 
   BigInteger
-  (tuple [x] (Tuple/from (into-array BigInteger [x])))
+  (tuple
+    ([x] (Tuple/from (into-array BigInteger [x])))
+    ([x y] (Tuple/from (into-array Tuple [(tuple x) (tuple y)]))))
 
   Double
-  (tuple [x] (Tuple/from (into-array Double [x])))
+  (tuple
+    ([x] (Tuple/from (into-array Double [x])))
+    ([x y] (Tuple/from (into-array Tuple [(tuple x) (tuple y)]))))
 
   Float
-  (tuple [x] (Tuple/from (into-array Float [x])))
+  (tuple
+    ([x] (Tuple/from (into-array Float [x])))
+    ([x y] (Tuple/from (into-array Tuple [(tuple x) (tuple y)]))))
 
   Tuple
-  (tuple [x] x))
+  (tuple
+    ([x] x)
+    ([x y] (Tuple/from (into-array Tuple [x (tuple y)]))))
+  )
 
 (extend-protocol ConvertibleToTuple
   ;; byte[]
@@ -62,6 +81,10 @@
   (fn [& ys] (mapv class ys)))
 (defmethod range [Tuple] [x] (.range x))
 
+(defn to-items
+  [^Tuple x]
+  (.getItems x))
+
 (defn to-str
   ([^Tuple x]
    (to-str x 0))
@@ -70,4 +93,4 @@
 
 (defn to-strs
   [^Tuple x]
-  (.getItems x))
+  (map str (.getItems x)))

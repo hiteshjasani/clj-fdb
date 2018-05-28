@@ -5,8 +5,14 @@
   (:import (com.apple.foundationdb.tuple Tuple)))
 
 (deftest making-tuples
-  (is (= (Tuple.) (tuple nil)))
-  (is (= "foo" (to-str (tuple "foo"))))
+  (testing "single tuples"
+    (is (= (Tuple.) (tuple nil)))
+    (is (= "foo" (to-str (tuple "foo")))))
+
+  (testing "2 tuples"
+    (is (= ["(\"foo\")" "(\"bar\")"] (to-strs (tuple "foo" "bar"))))
+    (is (= "((\"foo\"), (\"bar\"))" (.toString (tuple "foo" "bar"))))
+    )
   )
 
 ;; packed ints do not currently have conversion functions back to ints

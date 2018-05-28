@@ -1,6 +1,6 @@
 (ns clj-fdb.simple
   (:require [clj-fdb.macros :refer [jfn]])
-  (:import (com.apple.foundationdb MutationType)))
+  (:import (com.apple.foundationdb MutationType Range)))
 
 (defn get-val
   [db k]
@@ -36,3 +36,19 @@
              )]
     (.run db (jfn [tx]
                   (.mutate tx mt k param)))))
+
+(defn get-range
+  "Must have a range to do this query.
+
+  (let [range (.range (tuple \"foo\" \"bar\"))]
+    (get-range range 10 :asc))
+  "
+  ([db ^Range range] (get-range db range 20 :asc))
+  ([db ^Range range ^long limit] (get-range db range 20 :asc))
+  ([db ^Range range ^long limit direction]
+   (.read db (jfn [tx]
+                  (let [reverse? (case direction
+                                   :asc false
+                                   :desc true)]
+                    (.join (.asList (.getRange tx range limit reverse?)))))))
+  )

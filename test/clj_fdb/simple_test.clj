@@ -181,5 +181,30 @@
       ))
   )
 
+(deftest range-tests
+  (testing "subspace range"
+    (let [ss (-> (dir/create-or-open (dir/directory-layer) *db*
+                                     (conj test-subspace "subspace range"))
+                 (.join))]
+      (testing "incrementing"
+        (put-val *db* (tup/pack ss (tup/tuple "blob" 1))
+                 (val/byte-arr "part 1"))
+        (put-val *db* (tup/pack ss (tup/tuple "blob" 2))
+                 (val/byte-arr "part 2"))
+        (put-val *db* (tup/pack ss (tup/tuple "blob" 3))
+                 (val/byte-arr "part 3"))
+
+        (let [rows (map (fn [exp-k exp-v act-kv] [exp-k exp-v act-kv])
+                        [[["blob"] [1]] [["blob"] [2]] [["blob"] [3]]]
+                        ["part 1" "part 2" "part 3"]
+                        (get-range *db* (.range ss)))]
+          (doseq [[exp-k exp-v act-kv] rows]
+            (is (= exp-k (tup/to-items
+                          (tup/tuple (.unpack ss (.getKey act-kv))))))
+            (is (= exp-v (val/to-str (.getValue act-kv))))
+            ))
+        )
+      ))
+  )
 
 (run-tests)

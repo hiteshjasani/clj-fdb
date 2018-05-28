@@ -32,6 +32,7 @@
 (defmethod pack [Subspace Tuple] [x y] (.pack x y))
 (defmethod pack [Subspace String] [x y] (.pack x y))
 (defmethod pack [Subspace Long] [x y] (.pack x y))
+(defmethod pack [Subspace String] [x y] (.pack x y))
 
 (defn as-str
   [^Subspace x]
