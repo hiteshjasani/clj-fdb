@@ -24,10 +24,6 @@
 (defmethod range [Subspace String] [x y] (.range x (tuple y)))
 (defmethod range [Subspace Long] [x y] (.range x (tuple y)))
 
-(extend-protocol tup/ConvertibleToTuple
-  Subspace
-  (tuple [x] (Tuple/fromBytes (.pack x))))
-
 (defmethod pack [Subspace] [x] (.pack x))
 (defmethod pack [Subspace Tuple] [x y] (.pack x y))
 (defmethod pack [Subspace String] [x y] (.pack x y))

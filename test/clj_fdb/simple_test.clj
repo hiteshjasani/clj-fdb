@@ -195,12 +195,11 @@
                  (val/byte-arr "part 3"))
 
         (let [rows (map (fn [exp-k exp-v act-kv] [exp-k exp-v act-kv])
-                        [[["blob"] [1]] [["blob"] [2]] [["blob"] [3]]]
+                        [["blob" 1] ["blob" 2] ["blob" 3]]
                         ["part 1" "part 2" "part 3"]
                         (get-range *db* (.range ss)))]
           (doseq [[exp-k exp-v act-kv] rows]
-            (is (= exp-k (tup/to-items
-                          (tup/tuple (.unpack ss (.getKey act-kv))))))
+            (is (= exp-k (tup/to-items (.unpack ss (.getKey act-kv)))))
             (is (= exp-v (val/to-str (.getValue act-kv))))
             ))
         )

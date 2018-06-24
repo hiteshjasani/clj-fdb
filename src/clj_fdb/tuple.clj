@@ -6,57 +6,37 @@
            (java.nio.charset StandardCharsets)
            (com.apple.foundationdb.tuple Tuple)))
 
-(defprotocol ConvertibleToTuple
-  (tuple [x] [x y]))
+(defn from
+  "Creates a new Tuple from a variable number of elements. The elements
+  must follow the type guidelines from add, and so can only be
+  Strings, byte[]s, Numbers, UUIDs, Booleans, Lists, Tuples, or
+  nulls.
 
-(extend-protocol ConvertibleToTuple
-  nil
-  (tuple
-    ([x] (Tuple.))
-    ([x y] (Tuple/from (into-array Tuple [(tuple x) (tuple y)]))))
+  Performance: Similar to `tuple` except assumes that all the elements
+  are of the same type.  If not, then an IllegalArgumentException is
+  thrown."
+  [& args]
+  (Tuple/from (into-array args)))
 
-  String
-  (tuple
-    ([x] (Tuple/from (into-array String [x])))
-    ([x y] (Tuple/from (into-array Tuple [(tuple x) (tuple y)])))
-    ;; ([x y] (.add (tuple x) (tuple y)))
-    )
+(defn tuple
+  "Creates a new Tuple from a variable number of elements. The elements
+  must follow the type guidelines from add, and so can only be
+  Strings, byte[]s, Numbers, UUIDs, Booleans, Lists, Tuples, or
+  nulls.
 
-  Long
-  (tuple
-    ([x] (Tuple/from (into-array Long [x])))
-    ([x y] (Tuple/from (into-array Tuple [(tuple x) (tuple y)]))))
-
-  Integer
-  (tuple
-    ([x] (Tuple/from (into-array Integer [x])))
-    ([x y] (Tuple/from (into-array Tuple [(tuple x) (tuple y)]))))
-
-  BigInteger
-  (tuple
-    ([x] (Tuple/from (into-array BigInteger [x])))
-    ([x y] (Tuple/from (into-array Tuple [(tuple x) (tuple y)]))))
-
-  Double
-  (tuple
-    ([x] (Tuple/from (into-array Double [x])))
-    ([x y] (Tuple/from (into-array Tuple [(tuple x) (tuple y)]))))
-
-  Float
-  (tuple
-    ([x] (Tuple/from (into-array Float [x])))
-    ([x y] (Tuple/from (into-array Tuple [(tuple x) (tuple y)]))))
-
-  Tuple
-  (tuple
-    ([x] x)
-    ([x y] (Tuple/from (into-array Tuple [x (tuple y)]))))
-  )
-
-(extend-protocol ConvertibleToTuple
-  ;; byte[]
-  (Class/forName "[B")
-  (tuple [x] (Tuple/fromBytes x)))
+  Performance: If you know that all the elements will be of the same type,
+  then `from` will be a bit faster.
+  "
+  [& args]
+  (if (empty? args)
+    (Tuple.)
+    (let [typ (type (first args))]
+      (if (every? #(= typ (type %)) args)
+        (Tuple/from (into-array args))
+        (reduce (fn [acc x]
+                  (.add acc x))
+                (Tuple.)
+                args)))))
 
 (defmulti pack
   "Pack into a byte[].  This function is usable for keys but should
@@ -85,12 +65,40 @@
   [^Tuple x]
   (.getItems x))
 
-(defn to-str
+(defn to-strs
+  [^Tuple x]
+  (map str (.getItems x)))
+
+(defn ^String to-str
   ([^Tuple x]
    (to-str x 0))
   ([^Tuple x ^Integer index]
    (.getString x index)))
 
-(defn to-strs
-  [^Tuple x]
-  (map str (.getItems x)))
+(defn ^boolean to-boolean
+  [^Tuple x index]
+  (.getBoolean x index))
+
+(defn ^BigInteger to-big-int
+  [^Tuple x index]
+  (.getBigInteger x index))
+
+(defn ^"[B" to-bytes
+  [^Tuple x index]
+  (.getBytes x index))
+
+(defn ^long to-long
+  [^Tuple x index]
+  (.getLong x index))
+
+(defn ^double to-double
+  [^Tuple x index]
+  (.getDouble x index))
+
+(defn ^Tuple to-nested-tuple
+  [^Tuple x index]
+  (.getNestedTuple x index))
+
+(defn equals
+  [^Tuple a ^Tuple b]
+  (.equals a b))
