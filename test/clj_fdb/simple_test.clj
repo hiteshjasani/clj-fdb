@@ -7,6 +7,7 @@
             [clj-fdb.subspace :as ss]
             [clj-fdb.tuple :as tup]
             [clj-fdb.value :as val]
+            [clj-fdb.key-selector :as ks]
             [clj-fdb.simple :refer :all]
             ))
 
@@ -184,29 +185,89 @@
 
 (deftest range-tests
   (testing "subspace range"
-    (let [ss (-> (dir/create-or-open (dir/directory-layer) *db*
-                                     (conj test-subspace "subspace range"))
-                 (.join))]
-      (testing "increasing keys"
-        (let [key-tuples [(tup/tuple "blob" 1)
-                          (tup/tuple "blob" 2)
-                          (tup/tuple "blob" 3)]]
-          (put-val *db* (pack ss (nth key-tuples 0))
-                   (val/byte-arr "part 1"))
-          (put-val *db* (pack ss (nth key-tuples 1))
-                   (val/byte-arr "part 2"))
-          (put-val *db* (pack ss (nth key-tuples 2))
-                   (val/byte-arr "part 3"))
+    (let [ss         (-> (dir/create-or-open (dir/directory-layer) *db*
+                                             (conj test-subspace "subspace range"))
+                         (.join))
+          num-recs   10
+          key-tuples (mapv #(tup/tuple "id" %) (core-range num-recs))
+          values     (mapv #(str "person " %) (core-range num-recs))
+          kvs        (zipmap key-tuples values)
+          ]
+      (doseq [[k v] kvs]
+        (put-val *db* (pack ss k) (val/byte-arr v)))
 
-          (let [rows (map (fn [exp-k exp-v act-kv]
-                            [exp-k exp-v act-kv])
-                          key-tuples
-                          ["part 1" "part 2" "part 3"]
-                          (get-range *db* (range ss)))]
-            (doseq [[exp-k exp-v act-kv] rows]
-              (is (tup/equals exp-k (.unpack ss (.getKey act-kv))))
-              (is (= exp-v (val/to-str (.getValue act-kv))))
-              ))))
+      (testing "increasing keys, full subspace"
+        (let [rows (map (fn [exp-k exp-v act-kv]
+                          [exp-k exp-v act-kv])
+                        key-tuples
+                        values
+                        (get-range *db* (range ss)))]
+          (is (= num-recs (count rows)))
+          (doseq [[exp-k exp-v act-kv] rows]
+            (is (tup/equals exp-k (.unpack ss (.getKey act-kv))))
+            (is (= exp-v (val/to-str (.getValue act-kv))))
+            )))
+
+      (testing "increasing keys, partial tuple key"
+        (let [rows (map (fn [exp-k exp-v act-kv]
+                          [exp-k exp-v act-kv])
+                        key-tuples
+                        values
+                        (get-range *db* (range ss (tup/tuple "id"))))]
+          (is (= num-recs (count rows)))
+          (doseq [[exp-k exp-v act-kv] rows]
+            (is (tup/equals exp-k (.unpack ss (.getKey act-kv))))
+            (is (= exp-v (val/to-str (.getValue act-kv))))
+            )))
+
+      (testing "non-matching partial tuple key returns zero matches"
+        (let [rows (map (fn [exp-k exp-v act-kv]
+                          [exp-k exp-v act-kv])
+                        key-tuples
+                        values
+                        (get-range *db* (range ss (tup/tuple "invalid-key"))))]
+          (is (zero? (count rows)))
+          ))
+
+      (testing "increasing keys, tuple key from [0,9)"
+        (let [rows (map (fn [exp-k exp-v act-kv]
+                          [exp-k exp-v act-kv])
+                        key-tuples
+                        values
+                        (get-range *db* (ks/>= (pack ss (first key-tuples)))
+                                   (ks/<= (pack ss (last key-tuples)))))]
+          (is (= (dec num-recs) (count rows)))
+          (doseq [[exp-k exp-v act-kv] rows]
+            (is (tup/equals exp-k (.unpack ss (.getKey act-kv))))
+            (is (= exp-v (val/to-str (.getValue act-kv))))
+            )))
+
+      (testing "increasing keys, tuple key from [0,9), limit 3"
+        (let [rows (map (fn [exp-k exp-v act-kv]
+                          [exp-k exp-v act-kv])
+                        key-tuples
+                        values
+                        (get-range *db* (ks/>= (pack ss (first key-tuples)))
+                                   (ks/<= (pack ss (last key-tuples)))
+                                   3))]
+          (is (= 3 (count rows)))
+          (doseq [[exp-k exp-v act-kv] rows]
+            (is (tup/equals exp-k (.unpack ss (.getKey act-kv))))
+            (is (= exp-v (val/to-str (.getValue act-kv))))
+            )))
+
+      (testing "increasing keys, partial list [2,5)"
+        (let [rows (map (fn [exp-k exp-v act-kv]
+                          [exp-k exp-v act-kv])
+                        (drop 2 key-tuples)
+                        (drop 2 values)
+                        (get-range *db* (ks/>= (pack ss (nth key-tuples 2)))
+                                   (ks/<= (pack ss (nth key-tuples 5)))))]
+          (is (= 3 (count rows)))
+          (doseq [[exp-k exp-v act-kv] rows]
+            (is (tup/equals exp-k (.unpack ss (.getKey act-kv))))
+            (is (= exp-v (val/to-str (.getValue act-kv))))
+            )))
       ))
   )
 

@@ -4,7 +4,8 @@
             [clj-fdb.impl.core :as ic]
             [clj-fdb.tuple]
             [clj-fdb.subspace])
-  (:import (com.apple.foundationdb MutationType Range)))
+  (:import (com.apple.foundationdb Database KeySelector MutationType Range)
+           (clojure.lang Keyword)))
 
 (def pack ic/pack)
 
@@ -45,18 +46,29 @@
     (.run db (jfn [tx]
                   (.mutate tx mt k param)))))
 
-(defn get-range
-  "Must have a range to do this query.
-
-  (let [range (.range (tuple \"foo\" \"bar\"))]
-    (get-range range 10 :asc))
-  "
-  ([db ^Range range] (get-range db range 20 :asc))
-  ([db ^Range range ^long limit] (get-range db range 20 :asc))
-  ([db ^Range range ^long limit direction]
-   (.read db (jfn [tx]
-                  (let [reverse? (case direction
-                                   :asc false
-                                   :desc true)]
-                    (.join (.asList (.getRange tx range limit reverse?)))))))
-  )
+(defmulti get-range
+  "Do a range query"
+  (fn [& ys] (mapv class ys)))
+(defmethod get-range [Database Range] [db rng] (get-range db rng 20 :asc))
+(defmethod get-range [Database Range Long] [db rng limit]
+  (get-range db rng limit :asc))
+(defmethod get-range [Database Range Long Keyword] [db rng limit direction]
+  (.read db (jfn [tx]
+                 (let [reverse? (case direction
+                                  :asc false
+                                  :desc true)]
+                   (.join (.asList (.getRange tx rng limit reverse?)))))))
+(defmethod get-range [Database KeySelector KeySelector] [db begin end]
+  (.read db (jfn [tx]
+                 (.join (.asList (.getRange tx begin end))))))
+(defmethod get-range [Database KeySelector KeySelector Long]
+  [db begin end limit]
+  (.read db (jfn [tx]
+                 (.join (.asList (.getRange tx begin end limit))))))
+(defmethod get-range [Database KeySelector KeySelector Long Keyword]
+  [db begin end limit direction]
+  (.read db (jfn [tx]
+                 (let [reverse? (case direction
+                                  :asc false
+                                  :desc true)]
+                   (.join (.asList (.getRange tx begin end limit reverse?)))))))
