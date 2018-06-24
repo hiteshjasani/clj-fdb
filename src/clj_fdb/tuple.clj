@@ -1,6 +1,7 @@
 (ns clj-fdb.tuple
   (:refer-clojure :rename {range core-range})
-  (:require [octet.core :as buf])
+  (:require [octet.core :as buf]
+            [clj-fdb.impl.core :refer [pack range]])
   (:import (java.math BigInteger)
            (java.nio ByteBuffer ByteOrder)
            (java.nio.charset StandardCharsets)
@@ -38,27 +39,8 @@
                 (Tuple.)
                 args)))))
 
-(defmulti pack
-  "Pack into a byte[].  This function is usable for keys but should
-  not be used for turning values into byte arrays as the `to-*`
-  functions will not be able to convert them back."
-  (fn [x & ys] (vec (concat [(class x)] (map class ys)))))
-(defmethod pack [Long] [x] (.pack (tuple x)))
-(defmethod pack [Double] [x] (.pack (tuple x)))
-(defmethod pack [Integer] [x] (.pack (tuple x)))
-(defmethod pack [Float] [x] (.pack (tuple x)))
-(defmethod pack [String] [x] (.getBytes x StandardCharsets/UTF_8))
 (defmethod pack [Tuple] [x] (.pack x))
 
-(defmethod pack [Long Long] [x y] (.pack (.add (tuple x) (tuple y))))
-(defmethod pack [Long String] [x y] (.pack (.add (tuple x) (tuple y))))
-(defmethod pack [String Long] [x y] (.pack (.add (tuple x) (tuple y))))
-(defmethod pack [String String] [x y] (.pack (.add (tuple x) (tuple y))))
-(defmethod pack [Tuple Tuple] [x y] (.pack (.add x y)))
-
-(defmulti range
-  "Make a Range for use in queries and updates"
-  (fn [& ys] (mapv class ys)))
 (defmethod range [Tuple] [x] (.range x))
 
 (defn to-items
@@ -102,3 +84,7 @@
 (defn equals
   [^Tuple a ^Tuple b]
   (.equals a b))
+
+(defn byte-str
+  [^String s]
+  (.getBytes s))

@@ -1,6 +1,14 @@
 (ns clj-fdb.simple
-  (:require [clj-fdb.macros :refer [jfn]])
+  (:refer-clojure :rename {range core-range})
+  (:require [clj-fdb.macros :refer [jfn]]
+            [clj-fdb.impl.core :as ic]
+            [clj-fdb.tuple]
+            [clj-fdb.subspace])
   (:import (com.apple.foundationdb MutationType Range)))
+
+(def pack ic/pack)
+
+(def range ic/range)
 
 (defn get-val
   [db k]
