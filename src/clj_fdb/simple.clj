@@ -1,7 +1,7 @@
 (ns clj-fdb.simple
   (:refer-clojure :rename {range core-range})
   (:require [clj-fdb.macros :refer [jfn]]
-            [clj-fdb.impl.core :as ic]
+            [clj-fdb.interfaces :as ic]
             [clj-fdb.tuple]
             [clj-fdb.subspace])
   (:import (com.apple.foundationdb Database KeySelector MutationType Range)

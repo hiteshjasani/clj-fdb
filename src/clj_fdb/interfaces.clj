@@ -1,4 +1,4 @@
-(ns clj-fdb.impl.core
+(ns clj-fdb.interfaces
   (:refer-clojure :rename {range core-range}))
 
 (defmulti pack

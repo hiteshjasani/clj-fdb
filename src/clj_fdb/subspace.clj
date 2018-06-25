@@ -1,6 +1,6 @@
 (ns clj-fdb.subspace
   (:refer-clojure :rename {range core-range})
-  (:require [clj-fdb.impl.core :refer [pack range]]
+  (:require [clj-fdb.interfaces :refer [pack range]]
             [clj-fdb.tuple :as tup :refer [tuple]])
   (:import (com.apple.foundationdb.subspace Subspace)
            (com.apple.foundationdb.tuple Tuple)))

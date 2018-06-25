@@ -1,7 +1,7 @@
 (ns clj-fdb.tuple
   (:refer-clojure :rename {range core-range})
   (:require [octet.core :as buf]
-            [clj-fdb.impl.core :refer [pack range]])
+            [clj-fdb.interfaces :refer [pack range]])
   (:import (java.math BigInteger)
            (java.nio ByteBuffer ByteOrder)
            (java.nio.charset StandardCharsets)
