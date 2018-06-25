@@ -14,7 +14,8 @@
       (is (.join (exists? (directory-layer) db [])))
       (is (.join (exists? (directory-layer) db ["test"])))
       (is (.join (exists? (directory-layer) db ["test" "directory-test"])))
-      (is (= ["test"] (.join (ls (directory-layer) db []))))
+      ;; Following breaks for db's with multiple active subspaces
+      #_(is (= ["test"] (.join (ls (directory-layer) db []))))
       (is (= ["directory-test"] (.join (ls (directory-layer) db ["test"]))))
       (is (= [] (.join (ls (directory-layer) db ["test" "directory-test"]))))
       (is (.join (rm-if-exists!? (directory-layer) db ["test"])))
@@ -22,7 +23,8 @@
       (is (false? (.join (exists? (directory-layer) db ["test"]))))
       (is (false? (.join (exists? (directory-layer) db ["test"
                                                         "directory-test"]))))
-      (is (= [] (.join (ls (directory-layer) db []))))
+      ;; Following breaks for db's with multiple active subspaces
+      #_(is (= [] (.join (ls (directory-layer) db []))))
       )))
 
 (deftest making-multiple-subspaces
