@@ -220,6 +220,19 @@
             (is (= exp-v (val/to-str (.getValue act-kv))))
             )))
 
+      (testing "increasing keys, range starts with partial tuple key"
+        (let [rows (map (fn [exp-k exp-v act-kv]
+                          [exp-k exp-v act-kv])
+                        key-tuples
+                        values
+                        (get-range *db* (range-starts-with
+                                         (pack ss (tup/tuple "id" 0)))))]
+          (is (= 1 (count rows)))
+          (doseq [[exp-k exp-v act-kv] rows]
+            (is (tup/equals exp-k (.unpack ss (.getKey act-kv))))
+            (is (= exp-v (val/to-str (.getValue act-kv))))
+            )))
+
       (testing "non-matching partial tuple key returns zero matches"
         (let [rows (map (fn [exp-k exp-v act-kv]
                           [exp-k exp-v act-kv])

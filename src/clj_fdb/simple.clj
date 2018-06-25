@@ -11,6 +11,10 @@
 
 (def range ic/range)
 
+(defn range-starts-with
+  [^"[B" prefix]
+  (Range/startsWith prefix))
+
 (defn get-val
   [db k]
   (.read db (jfn [tx]
