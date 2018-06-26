@@ -17,25 +17,25 @@
 
 
 (defn get-val
-  [db k]
-  (.read db (jfn [tx]
-                 (.join (.get tx k)))))
+  [^TransactionContext tx-ctx k]
+  (.read tx-ctx (jfn [tx]
+                     (.join (.get tx k)))))
 
 (defn put-val
-  [db k v]
-  (.run db (jfn [tx]
-                (.set tx k v))))
+  [^TransactionContext tx-ctx k v]
+  (.run tx-ctx (jfn [tx]
+                    (.set tx k v))))
 
 (defn put-vals
-  [db m]
-  (.run db (jfn [tx]
-                (doseq [[k v] m]
-                  (.set tx k v)))))
+  [^TransactionContext tx-ctx m]
+  (.run tx-ctx (jfn [tx]
+                    (doseq [[k v] m]
+                      (.set tx k v)))))
 
 (defn atomic
   "
   https://apple.github.io/foundationdb/javadoc/com/apple/foundationdb/MutationType.html"
-  [db k op param]
+  [^TransactionContext tx-ctx k op param]
   (let [mt (case op
              :add                   MutationType/ADD
              :bit-and               MutationType/BIT_AND
@@ -48,48 +48,50 @@
              :version-stamped-key   MutationType/SET_VERSIONSTAMPED_KEY
              :version-stamped-value MutationType/SET_VERSIONSTAMPED_VALUE
              )]
-    (.run db (jfn [tx]
-                  (.mutate tx mt k param)))))
+    (.run tx-ctx (jfn [tx]
+                      (.mutate tx mt k param)))))
 
 (defmulti clear
   "Clear one or more keys"
   (fn [& ys] (mapv class ys)))
-(defmethod clear [TransactionContext (Class/forName "[B")] [txctx key]
-  (.run txctx (jfn [tx]
-                   (.clear tx key))))
+(defmethod clear [TransactionContext (Class/forName "[B")] [tx-ctx key]
+  (.run tx-ctx (jfn [tx]
+                    (.clear tx key))))
 (defmethod clear [TransactionContext (Class/forName "[B") (Class/forName "[B")]
-  [txctx begin-key end-key]
-  (.run txctx (jfn [tx]
-                   (.clear tx begin-key end-key))))
-(defmethod clear [TransactionContext Range] [txctx rng]
-  (.run txctx (jfn [tx]
-                   (.clear tx rng))))
+  [tx-ctx begin-key end-key]
+  (.run tx-ctx (jfn [tx]
+                    (.clear tx begin-key end-key))))
+(defmethod clear [TransactionContext Range] [tx-ctx rng]
+  (.run tx-ctx (jfn [tx]
+                    (.clear tx rng))))
 
 (defmulti get-range
   "Do a range query"
   (fn [& ys] (mapv class ys)))
-(defmethod get-range [TransactionContext Range] [db rng]
-  (get-range db rng 20 :asc))
-(defmethod get-range [TransactionContext Range Long] [db rng limit]
-  (get-range db rng limit :asc))
+(defmethod get-range [TransactionContext Range] [tx-ctx rng]
+  (.read tx-ctx (jfn [tx]
+                     (.join (.asList (.getRange tx rng))))))
+(defmethod get-range [TransactionContext Range Long] [tx-ctx rng limit]
+  (get-range tx-ctx rng limit :asc))
 (defmethod get-range [TransactionContext Range Long Keyword]
-  [db rng limit direction]
-  (.read db (jfn [tx]
-                 (let [reverse? (case direction
-                                  :asc false
-                                  :desc true)]
-                   (.join (.asList (.getRange tx rng limit reverse?)))))))
-(defmethod get-range [TransactionContext KeySelector KeySelector] [db begin end]
-  (.read db (jfn [tx]
-                 (.join (.asList (.getRange tx begin end))))))
+  [tx-ctx rng limit direction]
+  (.read tx-ctx (jfn [tx]
+                     (let [reverse? (case direction
+                                      :asc false
+                                      :desc true)]
+                       (.join (.asList (.getRange tx rng limit reverse?)))))))
+(defmethod get-range [TransactionContext KeySelector KeySelector]
+  [tx-ctx begin end]
+  (.read tx-ctx (jfn [tx]
+                     (.join (.asList (.getRange tx begin end))))))
 (defmethod get-range [TransactionContext KeySelector KeySelector Long]
-  [db begin end limit]
-  (.read db (jfn [tx]
+  [tx-ctx begin end limit]
+  (.read tx-ctx (jfn [tx]
                  (.join (.asList (.getRange tx begin end limit))))))
 (defmethod get-range [TransactionContext KeySelector KeySelector Long Keyword]
-  [db begin end limit direction]
-  (.read db (jfn [tx]
-                 (let [reverse? (case direction
-                                  :asc false
-                                  :desc true)]
-                   (.join (.asList (.getRange tx begin end limit reverse?)))))))
+  [tx-ctx begin end limit direction]
+  (.read tx-ctx (jfn [tx]
+                     (let [reverse? (case direction
+                                      :asc false
+                                      :desc true)]
+                       (.join (.asList (.getRange tx begin end limit reverse?)))))))
