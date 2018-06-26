@@ -106,6 +106,52 @@
       ))
   )
 
+(deftest clear-test
+  (testing "clearing single key"
+    (let [ss (-> (dir/create-or-open (dir/directory-layer) *db*
+                                     (conj test-subspace "clear-single"))
+                 (.join))]
+      (put-vals *db* {(pack ss "name") (val/byte-arr "elle")
+                      (pack ss "state") (val/byte-arr "wa")
+                      (pack ss "city") (val/byte-arr "seattle")})
+      (is (= "elle" (val/to-str (get-val *db* (pack ss "name")))))
+      (clear *db* (pack ss "name"))
+      (is (nil? (val/to-str (get-val *db* (pack ss "name")))))
+      (is (= "wa" (val/to-str (get-val *db* (pack ss "state")))))
+      (is (= "seattle" (val/to-str (get-val *db* (pack ss "city")))))
+      ))
+
+  (testing "clearing begin key to end key"
+    (let [ss (-> (dir/create-or-open (dir/directory-layer) *db*
+                                     (conj test-subspace "clear-single"))
+                 (.join))]
+      (put-vals *db* {(pack ss "name") (val/byte-arr "elle")
+                      (pack ss "state") (val/byte-arr "wa")
+                      (pack ss "city") (val/byte-arr "seattle")})
+      (is (= "elle" (val/to-str (get-val *db* (pack ss "name")))))
+      ;; Should delete city and name but leave state as range is exclusive
+      (clear *db* (pack ss "city") (pack ss "state"))
+      (is (nil? (val/to-str (get-val *db* (pack ss "name")))))
+      (is (nil? (val/to-str (get-val *db* (pack ss "city")))))
+      (is (= "wa" (val/to-str (get-val *db* (pack ss "state")))))
+      ))
+
+  (testing "clearing using range of the subspace"
+    (let [ss (-> (dir/create-or-open (dir/directory-layer) *db*
+                                     (conj test-subspace "clear-single"))
+                 (.join))]
+      (put-vals *db* {(pack ss "name") (val/byte-arr "elle")
+                      (pack ss "state") (val/byte-arr "wa")
+                      (pack ss "city") (val/byte-arr "seattle")})
+      (is (= "elle" (val/to-str (get-val *db* (pack ss "name")))))
+      ;; Should delete all keys
+      (clear *db* (range ss))
+      (is (nil? (val/to-str (get-val *db* (pack ss "name")))))
+      (is (nil? (val/to-str (get-val *db* (pack ss "city")))))
+      (is (nil? (val/to-str (get-val *db* (pack ss "state")))))
+      ))
+  )
+
 (deftest atomic-tests
   (testing "counters"
     (let [ss (-> (dir/create-or-open (dir/directory-layer) *db*

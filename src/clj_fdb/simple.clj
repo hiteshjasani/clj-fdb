@@ -4,16 +4,17 @@
             [clj-fdb.interfaces :as ic]
             [clj-fdb.tuple]
             [clj-fdb.subspace])
-  (:import (com.apple.foundationdb Database KeySelector MutationType Range)
+  (:import (com.apple.foundationdb Database KeySelector MutationType Range
+                                   TransactionContext)
            (clojure.lang Keyword)))
 
 (def pack ic/pack)
-
 (def range ic/range)
 
 (defn range-starts-with
   [^"[B" prefix]
   (Range/startsWith prefix))
+
 
 (defn get-val
   [db k]
@@ -49,6 +50,20 @@
              )]
     (.run db (jfn [tx]
                   (.mutate tx mt k param)))))
+
+(defmulti clear
+  "Clear one or more keys"
+  (fn [& ys] (mapv class ys)))
+(defmethod clear [TransactionContext (Class/forName "[B")] [txctx key]
+  (.run txctx (jfn [tx]
+                   (.clear tx key))))
+(defmethod clear [TransactionContext (Class/forName "[B") (Class/forName "[B")]
+  [txctx begin-key end-key]
+  (.run txctx (jfn [tx]
+                   (.clear tx begin-key end-key))))
+(defmethod clear [TransactionContext Range] [txctx rng]
+  (.run txctx (jfn [tx]
+                   (.clear tx rng))))
 
 (defmulti get-range
   "Do a range query"
