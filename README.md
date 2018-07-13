@@ -2,11 +2,6 @@
 
 A Clojure client interface to FoundationDB.
 
-This library currently has an embedded fdb-java jar version 5.1.7.  It
-supports API version 5.1.0.
-
-[Download](https://www.foundationdb.org/download/) latest fdb-java clients.
-
 ## Resources
 
 * [FoundationDB](https://www.foundationdb.org/)
