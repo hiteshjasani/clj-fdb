@@ -1,5 +1,5 @@
 {:deps
- {fdb {:local/root "lib/fdb-java-5.1.7.jar"}
+ {org.foundationdb/fdb-java {:mvn/version "5.2.5"}
   funcool/octet {:mvn/version "1.1.1"}}
 
  :aliases
