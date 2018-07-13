@@ -97,7 +97,7 @@
                                     (val/byte-arr (dec seats-left)))
                       (simp/put-val tx rec (val/byte-arr ""))))))))
 
-(defn drop
+(defn drop-class
   [^TransactionContext db ^String s ^String c]
   (.run db (jfn [tx]
                 (let [rec (simp/pack @ss (tup/tuple "attends" s c))]
@@ -111,7 +111,7 @@
 
   (init @db)
 
-  (pp/pprint (available-classes @db))
+  (println (format "%d classes are available" (count (available-classes @db))))
 
   (println "Ending class scheduler")
   (mount/stop))
