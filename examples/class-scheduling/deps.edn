@@ -1,4 +1,6 @@
 {:deps
  {hiteshjasani/clj-fdb {:git/url "https://github.com/hiteshjasani/clj-fdb"
-                        :sha "1f69383eb9977b262056f65cda8e9644dcf45da2"}
-  fdb {:local/root "../../lib/fdb-java-5.1.7.jar"}}}
+                        :sha "99bc4499339c71802e8bbb82a848a2b14a292f94"}
+  fdb {:local/root "../../lib/fdb-java-5.1.7.jar"}
+  functionalbytes/mount-lite {:mvn/version "2.1.1"}
+  }}
