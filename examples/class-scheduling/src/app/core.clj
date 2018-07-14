@@ -8,7 +8,8 @@
             [clj-fdb.value :as val]
             [clj-fdb.simple :as simp]
             [mount.lite :as mount])
-  (:import (com.apple.foundationdb Database TransactionContext)))
+  (:import (com.apple.foundationdb Database TransactionContext)
+           (com.apple.foundationdb.subspace Subspace)))
 
 (def subspace-name ["examples" "class-scheduling"])
 
@@ -40,6 +41,7 @@
         tms class-times]
     (str tms " " typ " " lvl)))
 
+(def class-names (init-class-names))
 
 (defn test-db []
   (simp/put-val @db (simp/pack @ss "hello") (val/byte-arr "world"))
@@ -50,6 +52,11 @@
   [tx class-name]
   (simp/put-val tx (simp/pack @ss (tup/tuple "class" class-name))
                 (val/byte-arr 100)))
+
+(defn clear-subspace
+  [^Database db ^Subspace ss]
+  (let [r (simp/range ss)]
+    (simp/clear db r)))
 
 (defn init
   [^Database db]
@@ -84,24 +91,108 @@
 (defn signup
   [^TransactionContext db ^String s ^String c]
   (.run db (jfn [tx]
+                ;; Check if the student is already signed up.  If we have
+                ;; a record, we'll just return nil.  Otherwise, we'll
+                ;; check if seats are left and sign them up.
                 (let [rec (simp/pack @ss (tup/tuple "attends" s c))]
-                  (if (seq (simp/get-val tx rec))
-                    nil                 ; student is already signed up
-                    (let [seats-left (->> (simp/pack @ss "class" c)
-                                          (simp/get-val tx)
-                                          val/to-int)]
+                  (when (nil? (simp/get-val tx rec))
+                    (let [class-key  (simp/pack @ss (tup/tuple "class" c))
+                          seats-left (-> (simp/get-val tx class-key)
+                                         val/to-int)]
                       (when (zero? seats-left)
                         (throw (IllegalStateException. "No remaining seats")))
 
-                      (simp/put-val tx (simp/pack @ss (tup/tuple "class" c))
+                      (when (= 5 (count (simp/get-range tx (simp/range @ss (tup/tuple "attends" s)))))
+                        (throw (IllegalStateException. "Too many classes")))
+
+                      (simp/put-val tx class-key
                                     (val/byte-arr (dec seats-left)))
                       (simp/put-val tx rec (val/byte-arr ""))))))))
 
 (defn drop-class
   [^TransactionContext db ^String s ^String c]
   (.run db (jfn [tx]
+                ;; Check if the student is enrolled in the class.  If they
+                ;; aren't then we don't have to do anything.  Otherwise
+                ;; we'll drop them from the class.
                 (let [rec (simp/pack @ss (tup/tuple "attends" s c))]
-                  (simp/clear tx rec)))))
+                  (when (seq (simp/get-val tx rec))
+                    (let [class-key  (simp/pack @ss "class" c)
+                          seats-left (-> (simp/get-val tx class-key)
+                                         val/to-int)]
+                      (simp/put-val class-key (val/byte-arr (inc seats-left)))
+                      (simp/clear tx rec)))))))
+
+(defn switch-classes
+  [^TransactionContext db
+   ^String student
+   ^String old-class
+   ^String new-class]
+  (.run db (jfn [tx]
+                (drop-class db student old-class)
+                (signup db student new-class))))
+
+(defn simulate-students
+  "This algorithm is similar to the Java one with some differences.
+     o
+  "
+  [^Database db i ops]
+  (let [student-id  (str "s" i)
+        my-classes  (atom {})
+        all-classes class-names
+        next-mood   (fn [class-count]
+                      (cond
+                        (and (> class-count 0)
+                             (< class-count 5)) (rand-nth ["drop" "switch"
+                                                           "add"])
+                        (> class-count 0)       (rand-nth ["drop" "switch"])
+                        (< class-count 5)       "add"))]
+    (dotimes [j ops]
+      (try
+        (let [mood (next-mood (count @my-classes))]
+          (condp = mood
+            "add"    (let [c (rand-nth all-classes)]
+                       (signup db student-id c)
+                       (swap! my-classes assoc c true))
+            "drop"   (let [c (rand-nth (keys @my-classes))]
+                       (drop-class db student-id c)
+                       (swap! my-classes dissoc c))
+            "switch" (let [old-class (rand-nth (keys @my-classes))
+                           new-class (rand-nth all-classes)]
+                       (switch-classes db student-id old-class new-class)
+                       (swap! my-classes (fn [m]
+                                           (-> m
+                                               (dissoc old-class)
+                                               (assoc new-class true)))))
+            ))
+        (catch Exception e
+          (println (str e ", need to recheck classes")))))))
+
+(defn run-sim
+  [^Database db num-students num-ops-per-student]
+  (let [sims (mapv (fn [idx]
+                     (future
+                       (simulate-students db idx num-ops-per-student)))
+                   (range num-students))]
+    (doseq [sim sims]
+      @sim)
+    (println (format "Ran %d transactions" (* num-students
+                                              num-ops-per-student)))))
+
+(defn print-attendance
+  [^Database db]
+  (let [rng (simp/range @ss (tup/tuple "attends"))
+        roster (simp/get-range db rng)]
+    (doseq [kv roster]
+      (println (format "student/class: %s"
+                       (str (vec (tup/to-strs (.unpack @ss (.getKey kv))))))))))
+
+(defn print-subspace
+  [^Database db ^Subspace ss]
+  (let [rng (simp/range ss)
+        entries (simp/get-range db rng)]
+    (doseq [kv entries]
+      (println (str (vec (tup/to-strs (.unpack ss (.getKey kv)))))))))
 
 (defn -main
   [& args]
@@ -109,9 +200,19 @@
   (mount/start)
   (test-db)
 
+  (clear-subspace @db @ss)
+
   (init @db)
+  (println (format "%d classes are available"
+                   (count (available-classes @db))))
 
-  (println (format "%d classes are available" (count (available-classes @db))))
+  (run-sim @db 5 5)
+  (print-attendance @db)
 
+  ;; Print contents of entire subspace
+  #_(print-subspace @db @ss)
+
+  (clear-subspace @db @ss)
+  (shutdown-agents)
   (println "Ending class scheduler")
   (mount/stop))
