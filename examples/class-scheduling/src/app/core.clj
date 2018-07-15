@@ -1,7 +1,7 @@
 (ns app.core
   (:require [clojure.pprint :as pp]
             [clj-fdb.db]
-            [clj-fdb.macros :refer [jfn]]
+            [clj-fdb.macros :refer [jfn run-tx read-tx]]
             [clj-fdb.directory :as dir]
             [clj-fdb.subspace :as ss]
             [clj-fdb.tuple :as tup]
@@ -55,74 +55,78 @@
 
 (defn init
   [^Database db]
-  (.run db (jfn [tx]
-                ;; An easier way to clear the whole subspace than individually
-                ;; clearing tuple ranges.
-                (simp/clear tx @ss)
+  (run-tx db
+          (jfn [tx]
+               ;; An easier way to clear the whole subspace than individually
+               ;; clearing tuple ranges.
+               (simp/clear tx @ss)
 
-                ;; Add classes
-                (doseq [class-name (init-class-names)]
-                  (add-class tx class-name))
-                )))
+               ;; Add classes
+               (doseq [class-name (init-class-names)]
+                 (add-class tx class-name))
+               )))
 
 (defn available-classes
   "List available classes"
   [^TransactionContext db]
-  (.run db (jfn [tx]
-                (->> (simp/get-range tx (simp/range @ss "class"))
-                     ;; Return array of [class-name remaining-seat-count]
-                     (map (fn [kv]
-                            [(tup/to-str (ss/unpack @ss (simp/kv-get-key kv)) 1)
-                             (val/to-int (simp/kv-get-value kv))]))
-                     ;; Remove classes with no remaining seats
-                     (filter #(> (second %) 0))
-                     ;; Strip out seat count from final result
-                     (mapv (fn [[class-name seat-count]]
-                             class-name))))))
+  (run-tx db
+          (jfn [tx]
+               (->> (simp/get-range tx (simp/range @ss "class"))
+                    ;; Return array of [class-name remaining-seat-count]
+                    (map (fn [kv]
+                           [(tup/to-str (ss/unpack @ss (simp/kv-get-key kv)) 1)
+                            (val/to-int (simp/kv-get-value kv))]))
+                    ;; Remove classes with no remaining seats
+                    (filter #(> (second %) 0))
+                    ;; Strip out seat count from final result
+                    (mapv (fn [[class-name seat-count]]
+                            class-name))))))
 
 (defn signup
   [^TransactionContext db ^String s ^String c]
-  (.run db (jfn [tx]
-                ;; Check if the student is already signed up.  If we have
-                ;; a record, we'll just return nil.  Otherwise, we'll
-                ;; check if seats are left and sign them up.
-                (let [rec (simp/pack @ss (tup/tuple "attends" s c))]
-                  (when (nil? (simp/get-val tx rec))
-                    (let [class-key  (simp/pack @ss (tup/tuple "class" c))
-                          seats-left (-> (simp/get-val tx class-key)
-                                         val/to-int)]
-                      (when (zero? seats-left)
-                        (throw (IllegalStateException. "No remaining seats")))
+  (run-tx db
+          (jfn [tx]
+               ;; Check if the student is already signed up.  If we have
+               ;; a record, we'll just return nil.  Otherwise, we'll
+               ;; check if seats are left and sign them up.
+               (let [rec (simp/pack @ss (tup/tuple "attends" s c))]
+                 (when (nil? (simp/get-val tx rec))
+                   (let [class-key  (simp/pack @ss (tup/tuple "class" c))
+                         seats-left (-> (simp/get-val tx class-key)
+                                        val/to-int)]
+                     (when (zero? seats-left)
+                       (throw (IllegalStateException. "No remaining seats")))
 
-                      (when (= 5 (count (simp/get-range tx (simp/range @ss (tup/tuple "attends" s)))))
-                        (throw (IllegalStateException. "Too many classes")))
+                     (when (= 5 (count (simp/get-range tx (simp/range @ss (tup/tuple "attends" s)))))
+                       (throw (IllegalStateException. "Too many classes")))
 
-                      (simp/put-val tx class-key
-                                    (val/byte-arr (dec seats-left)))
-                      (simp/put-val tx rec (val/byte-arr ""))))))))
+                     (simp/put-val tx class-key
+                                   (val/byte-arr (dec seats-left)))
+                     (simp/put-val tx rec (val/byte-arr ""))))))))
 
 (defn drop-class
   [^TransactionContext db ^String s ^String c]
-  (.run db (jfn [tx]
-                ;; Check if the student is enrolled in the class.  If they
-                ;; aren't then we don't have to do anything.  Otherwise
-                ;; we'll drop them from the class.
-                (let [rec (simp/pack @ss (tup/tuple "attends" s c))]
-                  (when (seq (simp/get-val tx rec))
-                    (let [class-key  (simp/pack @ss "class" c)
-                          seats-left (-> (simp/get-val tx class-key)
-                                         val/to-int)]
-                      (simp/put-val class-key (val/byte-arr (inc seats-left)))
-                      (simp/clear tx rec)))))))
+  (run-tx db
+          (jfn [tx]
+               ;; Check if the student is enrolled in the class.  If they
+               ;; aren't then we don't have to do anything.  Otherwise
+               ;; we'll drop them from the class.
+               (let [rec (simp/pack @ss (tup/tuple "attends" s c))]
+                 (when (seq (simp/get-val tx rec))
+                   (let [class-key  (simp/pack @ss "class" c)
+                         seats-left (-> (simp/get-val tx class-key)
+                                        val/to-int)]
+                     (simp/put-val class-key (val/byte-arr (inc seats-left)))
+                     (simp/clear tx rec)))))))
 
 (defn switch-classes
   [^TransactionContext db
    ^String student
    ^String old-class
    ^String new-class]
-  (.run db (jfn [tx]
-                (drop-class db student old-class)
-                (signup db student new-class))))
+  (run-tx db (jfn [tx]
+                  (drop-class db student old-class)
+                  (signup db student new-class))))
 
 (defn simulate-students
   "This algorithm is similar to the Java one with some differences.

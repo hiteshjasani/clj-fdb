@@ -3,7 +3,7 @@
             [clojure.data.csv :as csv]
             [clojure.edn :as edn]
             [clojure.java.io :as io]
-            [clj-fdb.macros :refer [jfn]]
+            [clj-fdb.macros :refer [jfn run-tx read-tx]]
             [clj-fdb.subspace :as ss]
             [clj-fdb.tuple :as tup]
             [clj-fdb.value :as val]
@@ -28,12 +28,13 @@
 
 (defn add-country-percentage
   [^Database db ^Subspace ss ^String country ^Double percentage]
-  (.run db (jfn [tx]
-                (let [k1 (simp/pack ss (tup/tuple "country" country))
-                      k2 (simp/pack ss (tup/tuple "revperc" (- 100.0 percentage) country))]
-                  (simp/put-val tx k1 (val/byte-arr percentage))
-                  (simp/put-val tx k2 (val/byte-arr percentage))
-                  ))))
+  (run-tx db
+          (jfn [tx]
+               (let [k1 (simp/pack ss (tup/tuple "country" country))
+                     k2 (simp/pack ss (tup/tuple "revperc" (- 100.0 percentage) country))]
+                 (simp/put-val tx k1 (val/byte-arr percentage))
+                 (simp/put-val tx k2 (val/byte-arr percentage))
+                 ))))
 
 (defn add-countries
   [^Database db ^Subspace ss country-map]
