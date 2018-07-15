@@ -1,6 +1,6 @@
 # clj-fdb
 
-    [org.jasani/clj-fdb "0.1.0"]
+    [org.jasani/clj-fdb "0.1.1"]
 
 A Clojure client interface to FoundationDB.
 
