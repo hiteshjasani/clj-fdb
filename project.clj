@@ -1,4 +1,4 @@
-(defproject org.jasani/clj-fdb "0.1.0"
+(defproject org.jasani/clj-fdb "0.1.1-SNAPSHOT"
   :description "Clojure binding to FoundationDB"
   :url "https://github.com/hiteshjasani/clj-fdb"
   :license {:name "BSD-2-Clause"
