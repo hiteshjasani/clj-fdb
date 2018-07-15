@@ -4,8 +4,8 @@
             [clj-fdb.interfaces :as ic]
             [clj-fdb.tuple]
             [clj-fdb.subspace])
-  (:import (com.apple.foundationdb Database KeySelector MutationType Range
-                                   TransactionContext)
+  (:import (com.apple.foundationdb Database KeySelector KeyValue MutationType
+                                   Range TransactionContext)
            (clojure.lang Keyword)))
 
 (def pack ic/pack)
@@ -95,3 +95,11 @@
                                       :asc false
                                       :desc true)]
                        (.join (.asList (.getRange tx begin end limit reverse?)))))))
+
+(defn kv-get-key
+  [^KeyValue kv]
+  (.getKey kv))
+
+(defn kv-get-value
+  [^KeyValue kv]
+  (.getValue kv))

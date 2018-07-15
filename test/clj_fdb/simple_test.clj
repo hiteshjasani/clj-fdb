@@ -250,8 +250,8 @@
                         (get-range *db* (range ss)))]
           (is (= num-recs (count rows)))
           (doseq [[exp-k exp-v act-kv] rows]
-            (is (tup/equals exp-k (ss/unpack ss (.getKey act-kv))))
-            (is (= exp-v (val/to-str (.getValue act-kv))))
+            (is (tup/equals exp-k (ss/unpack ss (kv-get-key act-kv))))
+            (is (= exp-v (val/to-str (kv-get-value act-kv))))
             )))
 
       (testing "increasing keys, partial tuple key"
@@ -262,8 +262,8 @@
                         (get-range *db* (range ss (tup/tuple "id"))))]
           (is (= num-recs (count rows)))
           (doseq [[exp-k exp-v act-kv] rows]
-            (is (tup/equals exp-k (ss/unpack ss (.getKey act-kv))))
-            (is (= exp-v (val/to-str (.getValue act-kv))))
+            (is (tup/equals exp-k (ss/unpack ss (kv-get-key act-kv))))
+            (is (= exp-v (val/to-str (kv-get-value act-kv))))
             )))
 
       (testing "increasing keys, range starts with partial tuple key"
@@ -275,8 +275,8 @@
                                          (pack ss (tup/tuple "id" 0)))))]
           (is (= 1 (count rows)))
           (doseq [[exp-k exp-v act-kv] rows]
-            (is (tup/equals exp-k (ss/unpack ss (.getKey act-kv))))
-            (is (= exp-v (val/to-str (.getValue act-kv))))
+            (is (tup/equals exp-k (ss/unpack ss (kv-get-key act-kv))))
+            (is (= exp-v (val/to-str (kv-get-value act-kv))))
             )))
 
       (testing "non-matching partial tuple key returns zero matches"
@@ -297,8 +297,8 @@
                                    (ks/<= (pack ss (last key-tuples)))))]
           (is (= (dec num-recs) (count rows)))
           (doseq [[exp-k exp-v act-kv] rows]
-            (is (tup/equals exp-k (ss/unpack ss (.getKey act-kv))))
-            (is (= exp-v (val/to-str (.getValue act-kv))))
+            (is (tup/equals exp-k (ss/unpack ss (kv-get-key act-kv))))
+            (is (= exp-v (val/to-str (kv-get-value act-kv))))
             )))
 
       (testing "increasing keys, tuple key from [0,9), limit 3"
@@ -311,8 +311,8 @@
                                    3))]
           (is (= 3 (count rows)))
           (doseq [[exp-k exp-v act-kv] rows]
-            (is (tup/equals exp-k (ss/unpack ss (.getKey act-kv))))
-            (is (= exp-v (val/to-str (.getValue act-kv))))
+            (is (tup/equals exp-k (ss/unpack ss (kv-get-key act-kv))))
+            (is (= exp-v (val/to-str (kv-get-value act-kv))))
             )))
 
       (testing "increasing keys, partial list [2,5)"
@@ -324,8 +324,8 @@
                                    (ks/<= (pack ss (nth key-tuples 5)))))]
           (is (= 3 (count rows)))
           (doseq [[exp-k exp-v act-kv] rows]
-            (is (tup/equals exp-k (ss/unpack ss (.getKey act-kv))))
-            (is (= exp-v (val/to-str (.getValue act-kv))))
+            (is (tup/equals exp-k (ss/unpack ss (kv-get-key act-kv))))
+            (is (= exp-v (val/to-str (kv-get-value act-kv))))
             )))
       ))
   )
