@@ -26,3 +26,7 @@
 (mount/defstate ss
   :start (.join (dir/create-or-open (dir/directory-layer) @db subspace-name))
   :stop (.join (dir/rm-if-exists!? (dir/directory-layer) @db subspace-name)))
+
+(defn clear-subspace
+  [^Database db ^Subspace ss]
+  (simp/clear db (simp/range ss)))
