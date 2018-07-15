@@ -65,7 +65,7 @@
   (mount/start)
 
   ;; Start from pristine state
-  (adb/clear-subspace @adb/db @adb/ss)
+  (simp/clear @adb/db @adb/ss)
 
   ;; pretty print the raw dataset
   #_(pp/pprint dataset)
@@ -101,6 +101,6 @@
    (simp/get-range @adb/db (simp/range @adb/ss (tup/tuple "country")) 5 :desc))
 
   ;; Clean up our changes
-  (adb/clear-subspace @adb/db @adb/ss)
+  (simp/clear @adb/db @adb/ss)
 
   (mount/stop))

@@ -123,7 +123,7 @@
 
   (testing "clearing begin key to end key"
     (let [ss (-> (dir/create-or-open (dir/directory-layer) *db*
-                                     (conj test-subspace "clear-single"))
+                                     (conj test-subspace "clear-begin-to-end"))
                  (.join))]
       (put-vals *db* {(pack ss "name") (val/byte-arr "elle")
                       (pack ss "state") (val/byte-arr "wa")
@@ -138,7 +138,7 @@
 
   (testing "clearing using range of the subspace"
     (let [ss (-> (dir/create-or-open (dir/directory-layer) *db*
-                                     (conj test-subspace "clear-single"))
+                                     (conj test-subspace "clear-range"))
                  (.join))]
       (put-vals *db* {(pack ss "name") (val/byte-arr "elle")
                       (pack ss "state") (val/byte-arr "wa")
@@ -146,6 +146,21 @@
       (is (= "elle" (val/to-str (get-val *db* (pack ss "name")))))
       ;; Should delete all keys
       (clear *db* (range ss))
+      (is (nil? (val/to-str (get-val *db* (pack ss "name")))))
+      (is (nil? (val/to-str (get-val *db* (pack ss "city")))))
+      (is (nil? (val/to-str (get-val *db* (pack ss "state")))))
+      ))
+
+  (testing "clearing using the subspace"
+    (let [ss (-> (dir/create-or-open (dir/directory-layer) *db*
+                                     (conj test-subspace "clear-subspace"))
+                 (.join))]
+      (put-vals *db* {(pack ss "name") (val/byte-arr "elle")
+                      (pack ss "state") (val/byte-arr "wa")
+                      (pack ss "city") (val/byte-arr "seattle")})
+      (is (= "elle" (val/to-str (get-val *db* (pack ss "name")))))
+      ;; Should delete all keys
+      (clear *db* ss)
       (is (nil? (val/to-str (get-val *db* (pack ss "name")))))
       (is (nil? (val/to-str (get-val *db* (pack ss "city")))))
       (is (nil? (val/to-str (get-val *db* (pack ss "state")))))

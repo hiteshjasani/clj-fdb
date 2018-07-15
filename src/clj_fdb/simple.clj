@@ -6,6 +6,7 @@
             [clj-fdb.subspace])
   (:import (com.apple.foundationdb Database KeySelector KeyValue MutationType
                                    Range TransactionContext)
+           (com.apple.foundationdb.subspace Subspace)
            (clojure.lang Keyword)))
 
 (def pack ic/pack)
@@ -64,6 +65,9 @@
 (defmethod clear [TransactionContext Range] [tx-ctx rng]
   (.run tx-ctx (jfn [tx]
                     (.clear tx rng))))
+(defmethod clear [TransactionContext Subspace] [tx-ctx ss]
+  (.run tx-ctx (jfn [tx]
+                    (clear tx (range ss)))))
 
 (defmulti get-range
   "Do a range query"

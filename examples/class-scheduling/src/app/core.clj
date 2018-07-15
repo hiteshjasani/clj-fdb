@@ -53,20 +53,12 @@
   (simp/put-val tx (simp/pack @ss (tup/tuple "class" class-name))
                 (val/byte-arr 100)))
 
-(defn clear-subspace
-  [^Database db ^Subspace ss]
-  (let [r (simp/range ss)]
-    (simp/clear db r)))
-
 (defn init
   [^Database db]
   (.run db (jfn [tx]
                 ;; An easier way to clear the whole subspace than individually
                 ;; clearing tuple ranges.
-                ;; (simp/clear @db (simp/range @ss))
-
-                (simp/clear tx (simp/range @ss "attends"))
-                (simp/clear tx (simp/range @ss "class"))
+                (simp/clear tx @ss)
 
                 ;; Add classes
                 (doseq [class-name (init-class-names)]
@@ -200,7 +192,8 @@
   (mount/start)
   (test-db)
 
-  (clear-subspace @db @ss)
+  ;; clear the subspace
+  (simp/clear @db @ss)
 
   (init @db)
   (println (format "%d classes are available"
@@ -212,7 +205,8 @@
   ;; Print contents of entire subspace
   #_(print-subspace @db @ss)
 
-  (clear-subspace @db @ss)
+  ;; clear the subspace
+  (simp/clear @db @ss)
   (shutdown-agents)
   (println "Ending class scheduler")
   (mount/stop))
