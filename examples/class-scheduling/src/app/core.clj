@@ -80,7 +80,7 @@
                 (->> (simp/get-range tx (simp/range @ss "class"))
                      ;; Return array of [class-name remaining-seat-count]
                      (map (fn [kv]
-                            [(tup/to-str (.unpack @ss (.getKey kv)) 1)
+                            [(tup/to-str (ss/unpack @ss (.getKey kv)) 1)
                              (val/to-int (.getValue kv))]))
                      ;; Remove classes with no remaining seats
                      (filter #(> (second %) 0))
@@ -185,14 +185,14 @@
         roster (simp/get-range db rng)]
     (doseq [kv roster]
       (println (format "student/class: %s"
-                       (str (vec (tup/to-strs (.unpack @ss (.getKey kv))))))))))
+                       (str (vec (tup/to-strs (ss/unpack @ss (.getKey kv))))))))))
 
 (defn print-subspace
   [^Database db ^Subspace ss]
   (let [rng (simp/range ss)
         entries (simp/get-range db rng)]
     (doseq [kv entries]
-      (println (str (vec (tup/to-strs (.unpack ss (.getKey kv)))))))))
+      (println (str (vec (tup/to-strs (ss/unpack ss (.getKey kv)))))))))
 
 (defn -main
   [& args]

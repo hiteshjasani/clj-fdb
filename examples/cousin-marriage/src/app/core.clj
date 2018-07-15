@@ -46,7 +46,7 @@
   (doseq [kv kv-entries]
     (println
      (format "%20s\t%2.1f"
-             (str (first (drop skip-keys (tup/to-strs (.unpack ss (.getKey kv))))))
+             (str (first (drop skip-keys (tup/to-strs (ss/unpack ss (.getKey kv))))))
              (val/to-double (.getValue kv))))))
 
 (defn print-subspace
@@ -55,7 +55,7 @@
         entries (simp/get-range db rng)]
     (doseq [kv entries]
       (println (format "key: %s,  value: %f"
-                       (str (vec (tup/to-strs (.unpack ss (.getKey kv)))))
+                       (str (vec (tup/to-strs (ss/unpack ss (.getKey kv)))))
                        (val/to-double (.getValue kv)))))))
 
 (defn print-hr [] (println (apply str (repeat 75 \-))))

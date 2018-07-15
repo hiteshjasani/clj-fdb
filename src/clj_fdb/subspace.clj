@@ -10,6 +10,12 @@
 (defmethod pack [Subspace String] [x y] (.pack x (tuple y)))
 (defmethod pack [Subspace Object] [x y] (.pack x y))
 
+(defn ^Tuple unpack
+  "Unpacks the Tuple from the Subspace.  The Subspace's prefix Tuple and
+  raw prefix will have been removed."
+  [^Subspace ss byte-arr]
+  (.unpack ss byte-arr))
+
 (defmethod range [Subspace] [x] (.range x))
 (defmethod range [Subspace Tuple] [x y] (.range x y))
 (defmethod range [Subspace String] [x y] (.range x (tuple y)))
@@ -18,7 +24,7 @@
   "Make a Subspace"
   (fn [& ys] (vec (concat [] (map class ys)))))
 (defmethod subspace [] [] (Subspace.))
-(defmethod subspace [String] [x] (Subspace. (tuple x)))
+(defmethod subspace [String] [x] (Subspace. (.getBytes x)))
 (defmethod subspace [Tuple] [x] (Subspace. x))
 ;; byte[]
 (defmethod subspace [(Class/forName "[B")] [x] (Subspace. x))

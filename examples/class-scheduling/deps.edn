@@ -1,4 +1,4 @@
 {:deps
- {org.jasani/clj-fdb {:mvn/version "0.1.0"}
+ {org.jasani/clj-fdb {:mvn/version "0.1.1-SNAPSHOT"}
   functionalbytes/mount-lite {:mvn/version "2.1.1"}
   }}
