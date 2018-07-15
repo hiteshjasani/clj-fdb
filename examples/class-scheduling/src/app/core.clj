@@ -16,7 +16,7 @@
 ;; DB connection
 (mount/defstate db
   :start (clj-fdb.db/open)
-  :stop (.close @db))
+  :stop (clj-fdb.db/close @db))
 
 ;; Subspace for our example.
 ;;

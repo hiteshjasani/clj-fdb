@@ -6,3 +6,7 @@
 (defn ^Database open
   []
   (.open FDBENV))
+
+(defn close
+  [^Database db]
+  (.close db))
