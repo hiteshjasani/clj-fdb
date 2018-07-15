@@ -12,7 +12,11 @@ this.  Any and all feedback is welcome.
 
 ## Usage
 
-Example usage can be seen in `test/` and `examples/class-scheduling`.
+Example usage can be seen in
+
+* `test/`
+* `examples/class-scheduling`
+* `examples/cousin-marriage`
 
 ## Resources
 
