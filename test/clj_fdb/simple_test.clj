@@ -250,7 +250,7 @@
                         (get-range *db* (range ss)))]
           (is (= num-recs (count rows)))
           (doseq [[exp-k exp-v act-kv] rows]
-            (is (tup/equals exp-k (.unpack ss (.getKey act-kv))))
+            (is (tup/equals exp-k (ss/unpack ss (.getKey act-kv))))
             (is (= exp-v (val/to-str (.getValue act-kv))))
             )))
 
@@ -262,7 +262,7 @@
                         (get-range *db* (range ss (tup/tuple "id"))))]
           (is (= num-recs (count rows)))
           (doseq [[exp-k exp-v act-kv] rows]
-            (is (tup/equals exp-k (.unpack ss (.getKey act-kv))))
+            (is (tup/equals exp-k (ss/unpack ss (.getKey act-kv))))
             (is (= exp-v (val/to-str (.getValue act-kv))))
             )))
 
@@ -275,7 +275,7 @@
                                          (pack ss (tup/tuple "id" 0)))))]
           (is (= 1 (count rows)))
           (doseq [[exp-k exp-v act-kv] rows]
-            (is (tup/equals exp-k (.unpack ss (.getKey act-kv))))
+            (is (tup/equals exp-k (ss/unpack ss (.getKey act-kv))))
             (is (= exp-v (val/to-str (.getValue act-kv))))
             )))
 
@@ -297,7 +297,7 @@
                                    (ks/<= (pack ss (last key-tuples)))))]
           (is (= (dec num-recs) (count rows)))
           (doseq [[exp-k exp-v act-kv] rows]
-            (is (tup/equals exp-k (.unpack ss (.getKey act-kv))))
+            (is (tup/equals exp-k (ss/unpack ss (.getKey act-kv))))
             (is (= exp-v (val/to-str (.getValue act-kv))))
             )))
 
@@ -311,7 +311,7 @@
                                    3))]
           (is (= 3 (count rows)))
           (doseq [[exp-k exp-v act-kv] rows]
-            (is (tup/equals exp-k (.unpack ss (.getKey act-kv))))
+            (is (tup/equals exp-k (ss/unpack ss (.getKey act-kv))))
             (is (= exp-v (val/to-str (.getValue act-kv))))
             )))
 
@@ -324,7 +324,7 @@
                                    (ks/<= (pack ss (nth key-tuples 5)))))]
           (is (= 3 (count rows)))
           (doseq [[exp-k exp-v act-kv] rows]
-            (is (tup/equals exp-k (.unpack ss (.getKey act-kv))))
+            (is (tup/equals exp-k (ss/unpack ss (.getKey act-kv))))
             (is (= exp-v (val/to-str (.getValue act-kv))))
             )))
       ))
